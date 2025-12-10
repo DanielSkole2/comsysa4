@@ -6,8 +6,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <stdbool.h> 
 
-void terminate(const char *error)
+
+uint32_t R[32] = {0}; 
+uint32_t PC = 0;      
+uint64_t instruction_count = 0; 
+bool running = true;  
+
+
+
+void terminate(const char *error)      
 {
   printf("%s\n", error);
   printf("RISC-V Simulator v0.11.0: Usage:\n");
@@ -22,17 +31,15 @@ void terminate(const char *error)
   exit(-1);
 }
 
-// Helper function - grabs args to simulated program from command line and places them in simulated memory
 int pass_args_to_program(struct memory* mem, int argc, char* argv[]) {
-  int seperator_position = 1; // skip first, it is the path to the simulator
+  int seperator_position = 1; 
   int seperator_found = 0;
   while (seperator_position < argc) {
     seperator_found = strcmp(argv[seperator_position],"--") == 0;
     if (seperator_found) break;
     seperator_position++;
   }
-  if (seperator_found) { // we've got args for the program!!
-    // the seperator is the first arg.
+  if (seperator_found) { 
     int first_arg = seperator_position;
     int num_args = argc - first_arg;
     unsigned count_addr = 0x1000000;
@@ -49,11 +56,9 @@ int pass_args_to_program(struct memory* mem, int argc, char* argv[]) {
       } while (c);
     }
   }
-  // leave it to main to handle args before the seperator
   return seperator_position;
 }
 
-// Helper function, prints disassembly
 void disassemble_to_stdout(struct memory* mem, struct program_info* prog_info, struct symbols* symbols) 
 {
   const int buf_size = 100;
@@ -92,14 +97,11 @@ int main(int argc, char *argv[])
     struct program_info prog_info;
     int status = read_elf(mem, &prog_info, argv[1], log_file);
     if (status) exit(status);
-    // The use of symbols provide for a nicer disassembly, but their us in A4 is optional,
-    // so feel free to remove/ignore setup and use of symbols.
     struct symbols* symbols = symbols_read_from_elf(argv[1]);
     if (symbols == NULL) {
       exit(-1);
     }
     if (argc == 3 && !strcmp(argv[2], "-d")) {
-      // disassemble text segment to stdout
       disassemble_to_stdout(mem, &prog_info, symbols);
       exit(0);
     }
@@ -130,7 +132,7 @@ int main(int argc, char *argv[])
     memory_delete(mem);
   }
   else {
-    terminate("Missing operands");
+    terminate("Missing operands");  
     memory_delete(mem);
   }
 }
